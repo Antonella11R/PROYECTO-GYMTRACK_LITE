@@ -39,11 +39,19 @@ final class AppConfig
     {
         $path = parse_url($this->appUrl(), PHP_URL_PATH);
 
-        if (!is_string($path) || $path === '/') {
+        if (is_string($path) && $path !== '' && $path !== '/') {
+            return rtrim($path, '/');
+        }
+
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+
+        if (!is_string($scriptName) || $scriptName === '') {
             return '';
         }
 
-        return rtrim($path, '/');
+        $runtimeBasePath = str_replace('\\', '/', dirname($scriptName));
+
+        return $runtimeBasePath === '/' ? '' : rtrim($runtimeBasePath, '/');
     }
 
     public function sessionName(): string

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Identity\Presentation\Web\Controllers;
 
+use App\Identity\Application\DTOs\CreateUserDTO;
+use App\Identity\Application\DTOs\UpdateUserDTO;
 use App\Identity\Application\UserService;
 use App\Identity\Domain\UserRole;
 use App\Shared\Infrastructure\Security\CsrfTokenManager;
@@ -56,7 +58,19 @@ final class AdminUserController
     {
         try {
             $this->assertToken((string) $request->input('_token'), 'user_form');
-            $this->users->create($request->all());
+            
+            $trainerIdRaw = $request->input('trainer_id');
+            $trainerId = ($trainerIdRaw !== null && $trainerIdRaw !== '') ? (int) $trainerIdRaw : null;
+            
+            $dto = new CreateUserDTO(
+                (string) $request->input('name', ''),
+                (string) $request->input('email', ''),
+                (string) $request->input('password', ''),
+                (string) $request->input('role', 'user'),
+                $trainerId
+            );
+            
+            $this->users->create($dto);
             $this->flashMessenger->success('Usuario creado correctamente.');
 
             return Response::redirect($this->urlGenerator->to('/admin/users'));
@@ -96,7 +110,22 @@ final class AdminUserController
     {
         try {
             $this->assertToken((string) $request->input('_token'), 'user_form');
-            $this->users->update((int) $params['id'], $request->all());
+            
+            $trainerIdRaw = $request->input('trainer_id');
+            $trainerId = ($trainerIdRaw !== null && $trainerIdRaw !== '') ? (int) $trainerIdRaw : null;
+            
+            $roleRaw = $request->input('role');
+            $passwordRaw = $request->input('password');
+            
+            $dto = new UpdateUserDTO(
+                (string) $request->input('name', ''),
+                (string) $request->input('email', ''),
+                $roleRaw !== null ? (string) $roleRaw : null,
+                $passwordRaw !== null ? (string) $passwordRaw : null,
+                $trainerId
+            );
+            
+            $this->users->update((int) $params['id'], $dto);
             $this->flashMessenger->success('Usuario actualizado correctamente.');
 
             return Response::redirect($this->urlGenerator->to('/admin/users'));

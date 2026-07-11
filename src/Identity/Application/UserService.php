@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Identity\Application;
 
+use App\Identity\Application\DTOs\CreateUserDTO;
+use App\Identity\Application\DTOs\UpdateUserDTO;
 use App\Identity\Domain\Email;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserRepository;
@@ -62,20 +64,18 @@ final class UserService
         return $this->users->findById($id);
     }
 
-    public function create(array $data): User
+    public function create(CreateUserDTO $dto): User
     {
-        $email = new Email((string) ($data['email'] ?? ''));
+        $email = new Email($dto->email);
 
         if ($this->users->findByEmail($email->value()) !== null) {
             throw new InvalidArgumentException('El correo ya está registrado.');
         }
 
-        $role = UserRole::from((string) ($data['role'] ?? 'user'));
-        $trainerId = $this->normalizeTrainerId($role, $data['trainer_id'] ?? null);
+        $role = UserRole::from($dto->role);
+        $trainerId = $this->normalizeTrainerId($role, $dto->trainerId);
 
-        $password = (string) ($data['password'] ?? '');
-
-        if (mb_strlen($password) < 8) {
+        if (mb_strlen($dto->password) < 8) {
             throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');
         }
 
@@ -84,9 +84,9 @@ final class UserService
         $now = new DateTimeImmutable();
         $user = new User(
             null,
-            (string) ($data['name'] ?? ''),
+            $dto->name,
             $email,
-            $this->passwordHasher->hash($password),
+            $this->passwordHasher->hash($dto->password),
             $role,
             $trainerId,
             true,
@@ -97,7 +97,7 @@ final class UserService
         return $this->users->save($user);
     }
 
-    public function update(int $id, array $data): void
+    public function update(int $id, UpdateUserDTO $dto): void
     {
         $existingUser = $this->users->findById($id);
 
@@ -105,22 +105,23 @@ final class UserService
             throw new InvalidArgumentException('El usuario solicitado no existe.');
         }
 
-        $email = new Email((string) ($data['email'] ?? ''));
+        $email = new Email($dto->email);
         $userWithSameEmail = $this->users->findByEmail($email->value());
 
         if ($userWithSameEmail !== null && $userWithSameEmail->id() !== $id) {
             throw new InvalidArgumentException('El correo ya está registrado por otro usuario.');
         }
 
-        $role = UserRole::from((string) ($data['role'] ?? $existingUser->role()->value));
-        $trainerId = $this->normalizeTrainerId($role, $data['trainer_id'] ?? null);
+        $roleValue = $dto->role ?? $existingUser->role()->value;
+        $role = UserRole::from($roleValue);
+        $trainerId = $this->normalizeTrainerId($role, $dto->trainerId);
         $this->assertTrainerExists($trainerId);
 
-        $existingUser->rename((string) ($data['name'] ?? ''));
+        $existingUser->rename($dto->name);
         $existingUser->changeEmail($email);
         $existingUser->changeRole($role, $trainerId);
 
-        $password = trim((string) ($data['password'] ?? ''));
+        $password = trim($dto->password ?? '');
         if ($password !== '') {
             if (mb_strlen($password) < 8) {
                 throw new InvalidArgumentException('La contraseña debe tener al menos 8 caracteres.');

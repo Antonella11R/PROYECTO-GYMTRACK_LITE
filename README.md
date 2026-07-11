@@ -171,14 +171,41 @@ La base principal usa cuatro tablas actuales:
 
 ## Requisitos
 
-Para ejecutar el proyecto localmente necesitas:
+Para ejecutar el proyecto localmente tienes dos opciones principales.
 
+**Opción 1: Usando Docker (Recomendado)**
+- Docker Desktop (o Docker Engine y Docker Compose instalados)
+- PowerShell (En Windows)
+
+**Opción 2: Usando entorno local**
 - PHP 8.2 o superior
 - extensiones `pdo` y `pdo_mysql`
 - MySQL o MariaDB
 - Apache
 - Composer, o alternativamente el `composer.phar` incluido
-- XAMPP en Windows si quieres usar el flujo recomendado de este repositorio
+- XAMPP en Windows si quieres usar el flujo manual
+
+## Instalación y ejecución con Docker (Recomendado)
+
+La forma más sencilla de compilar y levantar el proyecto completo es mediante Docker, ya que preconfigura automáticamente PHP, Apache, MySQL, las dependencias y la base de datos con un solo comando.
+
+### 1. Clonar el repositorio
+Ubica el repositorio en una carpeta de tu preferencia y abre **PowerShell** en esa ubicación.
+
+### 2. Ejecutar el script de inicio
+Ejecuta el script proporcionado para compilar y levantar todos los servicios automáticamente:
+```powershell
+.\start.ps1
+```
+
+Este script se encarga de:
+- Configurar tu archivo `.env` automáticamente.
+- Construir (compilar) la imagen de Docker para la aplicación.
+- Levantar los contenedores de la aplicación y base de datos.
+- Instalar dependencias mediante Composer.
+- Ejecutar migraciones y datos de prueba (seeds) de la base de datos.
+
+Una vez que termine, la aplicación estará disponible en [http://localhost:8000](http://localhost:8000).
 
 ## Instalacion y ejecucion con XAMPP
 
